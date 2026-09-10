@@ -1,0 +1,28 @@
+ip routing
+ip cef
+!
+interface {{ physical_interface }}
+ description IP_SRV#LAB#{{ description_base }}#LOCAL
+ no shutdown
+!
+interface {{ physical_interface }}.{{ vlan_mgmt }}
+ description IP_MGMT#LAB#{{ description_base }}#LOCAL
+{% if vrf_mgmt %}
+ ip vrf forwarding {{ vrf_mgmt }}
+{% endif %}
+ no shutdown
+!
+interface {{ physical_interface }}.{{ vlan_control }}
+ description IP_SRV#LAB#{{ description_base }}#LOCAL
+{% if vrf_control %}
+ ip vrf forwarding {{ vrf_control }}
+{% endif %}
+ no shutdown
+!
+interface {{ physical_interface }}.{{ vlan_data }}
+ description IP_SRV#LAB#{{ description_base }}#LOCAL
+{% if vrf_data %}
+ ip vrf forwarding {{ vrf_data }}
+{% endif %}
+ no shutdown
+!

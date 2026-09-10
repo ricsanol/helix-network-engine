@@ -1,0 +1,5 @@
+Jinja2>=3.1
+netmiko>=4.3
+openpyxl>=3.1
+pydantic>=2.0
+python-dotenv>=1.0

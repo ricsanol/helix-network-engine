@@ -1,0 +1,45 @@
+interface {{ physical_interface }}
+ description IP_SRV#10G#{{ description_base }}#LOCAL
+ mtu 9114
+ service-policy input QOS-TLF-IN
+ service-policy output QOS-TLF-OUT
+ no shutdown
+ frequency synchronization
+ ptp
+  profile MASTER
+ exit
+!
+{% if vlan_mgmt and ip_mgmt and vrf_mgmt %}
+interface {{ physical_interface }}.{{ vlan_mgmt }}
+ description IP_MGMT#10G#{{ description_base }}#LOCAL
+ mtu 9118
+ vrf {{ vrf_mgmt }}
+ ipv4 address {{ ip_mgmt }} {{ mask_mgmt }}
+ load-interval 30
+ encapsulation dot1q {{ vlan_mgmt }}
+!
+{% endif %}
+
+{% if vlan_control and ip_control and vrf_control %}
+interface {{ physical_interface }}.{{ vlan_control }}
+ description IP_SRV#10G#{{ description_base }}#LOCAL
+ mtu 9118
+ vrf {{ vrf_control }}
+ ipv4 address {{ ip_control }} {{ mask_control }}
+ load-interval 30
+ encapsulation dot1q {{ vlan_control }}
+!
+{% endif %}
+
+{% if vlan_data and ip_data and vrf_data %}
+interface {{ physical_interface }}.{{ vlan_data }}
+ description IP_SRV#10G#{{ description_base }}#LOCAL
+ mtu 9118
+ vrf {{ vrf_data }}
+ ipv4 address {{ ip_data }} {{ mask_data }}
+ load-interval 30
+ encapsulation dot1q {{ vlan_data }}
+!
+{% endif %}
+
+commit

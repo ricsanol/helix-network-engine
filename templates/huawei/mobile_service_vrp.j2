@@ -1,0 +1,89 @@
+system-view
+interface {{ physical_interface }}
+ ptp enable
+ clock synchronization enable
+ description IP_SRV#1G#{{ description_base }}#LOCAL
+ negotiation auto
+ undo shutdown
+ undo dcn
+ mtu 9000
+ control-flap
+ set flow-stat interval 10
+ port-queue be wfq weight 20 port-wred AGGRESSIVE outbound
+ port-queue af1 wfq weight 18 port-wred NICE outbound
+ port-queue af2 wfq weight 22 port-wred NICE outbound
+ port-queue af3 wfq weight 18 port-wred NICE outbound
+ port-queue af4 wfq weight 22 port-wred NICE outbound
+ port-queue ef pq shaping shaping-percentage 10 pbs 16384 outbound
+ port-queue cs6 pq shaping shaping-percentage 3 pbs 16384 outbound
+ qos buffer-policy large
+y
+
+{% if vlan_control and ip_control and mask_control and vrf_control %}
+interface {{ physical_interface }}.{{ vlan_control }}
+ vlan-type dot1q {{ vlan_control }}
+ mtu 9000
+ set flow-stat interval 10
+ description IP_SRV#1G#{{ description_base }}#LOCAL
+ ip binding vpn-instance {{ vrf_control }}
+ ip address {{ ip_control }} {{ mask_control }}
+ statistic enable
+ trust upstream default
+ trust 8021p
+ ip urpf strict
+#
+{% endif %}
+
+{% if vlan_data and ip_data and mask_data and vrf_data %}
+interface {{ physical_interface }}.{{ vlan_data }}
+ vlan-type dot1q {{ vlan_data }}
+ mtu 9000
+ set flow-stat interval 10
+ description IP_SRV#1G#{{ description_base }}#LOCAL
+ ip binding vpn-instance {{ vrf_data }}
+ ip address {{ ip_data }} {{ mask_data }}
+ statistic enable
+ trust upstream default
+ trust 8021p
+ ip urpf strict
+#
+{% endif %}
+
+{% if vlan_mgmt and ip_mgmt and mask_mgmt and vrf_mgmt %}
+interface {{ physical_interface }}.{{ vlan_mgmt }}
+ vlan-type dot1q {{ vlan_mgmt }}
+ mtu 9000
+ set flow-stat interval 10
+ description IP_MGMT#1G#{{ description_base }}#LOCAL
+ ip binding vpn-instance {{ vrf_mgmt }}
+ ip address {{ ip_mgmt }} {{ mask_mgmt }}
+ statistic enable
+ trust upstream default
+{% if dhcp_1 %} ip relay address {{ dhcp_1 }}
+{% endif %}{% if dhcp_2 %} ip relay address {{ dhcp_2 }}
+{% endif %}{% if dhcp_3 %} ip relay address {{ dhcp_3 }}
+{% endif %} dhcp relay source-ip-address {{ ip_mgmt }}
+ trust 8021p
+ ip urpf strict
+ dhcp select relay
+#
+{% endif %}
+
+bgp 10429
+{% if ip_control and mask_control and vrf_control %}
+ ipv4-family vpn-instance {{ vrf_control }}
+  network {{ ip_control }} {{ mask_control }} route-policy MOBILE-CONTROL-APPLY-COMMUNITY
+{% endif %}
+{% if ip_data and mask_data and vrf_data %}
+ ipv4-family vpn-instance {{ vrf_data }}
+  network {{ ip_data }} {{ mask_data }} route-policy MOBILE-DATA-APPLY-COMMUNITY
+{% endif %}
+{% if ip_mgmt and mask_mgmt and vrf_mgmt %}
+ ipv4-family vpn-instance {{ vrf_mgmt }}
+  network {{ ip_mgmt }} {{ mask_mgmt }} route-policy MOBILE-ACCESS-MGMT-APPLY-COMMUNITY
+{% endif %}
+commit
+#
+quit
+save
+y
